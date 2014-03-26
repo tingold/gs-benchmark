@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.boundless.ps.jmxparameterextractor;
+package com.boundless.benchmark.tools;
 
 import java.io.File;
 import javax.xml.transform.Transformer;
