@@ -31,7 +31,7 @@ public abstract class GeoserverCommunicator extends AbstractBenchmarkComponent {
 	final static Logger logger = LoggerFactory
 			.getLogger(GeoserverCommunicator.class);
 
-	private String geoserverHostAndPort, username, password;
+	private String geoserverHostAndPort, geoserverUsername, geoserverPassword;
 
 	/**
 	 * @return the geoserverHostAndPort
@@ -49,33 +49,33 @@ public abstract class GeoserverCommunicator extends AbstractBenchmarkComponent {
 	}
 
 	/**
-	 * @return the username
+	 * @return the geoserverUsername
 	 */
-	public String getUsername() {
-		return username;
+	public String getGeoserverUsername() {
+		return geoserverUsername;
 	}
 
 	/**
-	 * @param username
-	 *            the username to set
+	 * @param geoserverUsername
+	 *            the geoserverUsername to set
 	 */
-	public void setUsername(String username) {
-		this.username = username;
+	public void setGeoserverUsername(String geoserverUsername) {
+		this.geoserverUsername = geoserverUsername;
 	}
 
 	/**
-	 * @return the password
+	 * @return the geoserverPassword
 	 */
-	public String getPassword() {
-		return password;
+	public String getGeoserverPassword() {
+		return geoserverPassword;
 	}
 
 	/**
-	 * @param password
-	 *            the password to set
+	 * @param geoserverPassword
+	 *            the geoserverPassword to set
 	 */
-	public void setPassword(String password) {
-		this.password = password;
+	public void setGeoserverPassword(String password) {
+		this.geoserverPassword = password;
 	}
 
 	protected Object process(HttpUriRequest request, int expectedResponseCode)
@@ -84,8 +84,8 @@ public abstract class GeoserverCommunicator extends AbstractBenchmarkComponent {
 				":");
 		String geoserverHost = geoserverHostAndPort[0];
 		int geoserverPort = Integer.parseInt(geoserverHostAndPort[1]);
-		String username = this.getUsername();
-		String password = this.getPassword();
+		String username = this.getGeoserverUsername();
+		String password = this.getGeoserverPassword();
 
 		CredentialsProvider credsProvider = new BasicCredentialsProvider();
 		credsProvider.setCredentials(
@@ -154,8 +154,8 @@ public abstract class GeoserverCommunicator extends AbstractBenchmarkComponent {
 		return (Boolean) process(request, 201);
 	}
 
-	public boolean createShapefileBackedDataStore(String workspaceName,
-			String dataStoreName, String filePath) throws Exception {
+	public boolean loadDataStore(String workspaceName, String dataStoreName,
+			String filePath) throws Exception {
 		String geoserverHostAndPort = this.getGeoserverHostAndPort();
 
 		logger.debug("About to load data from [" + filePath
@@ -172,4 +172,24 @@ public abstract class GeoserverCommunicator extends AbstractBenchmarkComponent {
 		return (Boolean) process(request, 201);
 	}
 
+	public boolean createDatastore(String workspaceName, String datastoreName,
+			String dbHost, String dbPort, String username, String password,
+			String dbName) throws Exception {
+		String geoserverHostAndPort = this.getGeoserverHostAndPort();
+		String entity = "{" + "'dataStore': {" + "'name': '" + datastoreName
+				+ "'," + "'connectionParameters': {" + "'host': '" + dbHost
+				+ "'," + "'port': '" + dbPort + "'," + "'database': '" + dbName
+				+ "'," + "'user': '" + username + "'," + "'geoserverPassword': '"
+				+ password + "'," + "'dbtype': 'postgis'" + "	}" + "}" + "}";
+
+		logger.debug("About to create datastore [ " + datastoreName
+				+ "] in workspace [" + workspaceName + "]");
+		HttpPost request = new HttpPost("http://" + geoserverHostAndPort
+				+ "/geoserver/rest/workspaces/" + workspaceName + "/datastores");
+		request.addHeader("Accept", ContentType.APPLICATION_JSON.toString());
+		request.setEntity(EntityBuilder.create().setText(entity)
+				.setContentType(ContentType.APPLICATION_JSON).build());
+
+		return (Boolean) process(request, 201);
+	}
 }
