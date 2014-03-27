@@ -26,13 +26,13 @@
         <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
           <collectionProp name="Arguments.arguments"/>
         </elementProp>
-        <stringProp name="HTTPSampler.domain">${__P(wms.host,192.168.1.9)}</stringProp>
-        <stringProp name="HTTPSampler.port">${__P(wms.port,8080)}</stringProp>
+        <stringProp name="HTTPSampler.domain">${__P(ps.jmeter.gs.host,192.168.1.9)}</stringProp>
+        <stringProp name="HTTPSampler.port">${__P(ps.jmeter.gs.port,8080)}</stringProp>
         <stringProp name="HTTPSampler.connect_timeout"></stringProp>
         <stringProp name="HTTPSampler.response_timeout"></stringProp>
-        <stringProp name="HTTPSampler.protocol">${__P(wms.protocol,http)}</stringProp>
+        <stringProp name="HTTPSampler.protocol">${__P(ps.jmeter.gs.protocol,http)}</stringProp>
         <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-        <stringProp name="HTTPSampler.path">${__P(wms.path,/geoserver/wms)}</stringProp>
+        <stringProp name="HTTPSampler.path">${__P(ps.jmeter.gs.wms.path,/geoserver/wms)}</stringProp>
         <stringProp name="HTTPSampler.concurrentPool">4</stringProp>
       </ConfigTestElement>
       <hashTree/>
