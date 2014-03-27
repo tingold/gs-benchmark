@@ -36,11 +36,22 @@
     	<property name="jdbcTemplate" ref="jdbcTemplate" />
     </bean>
     
+    <bean id="jmeterrunner" class="com.boundless.benchmark.jmeter.JMeterRunner">
+        <property name="testFile" value="${ps.jmeter.testfile}" />
+        <property name="propertiesFile" value="benchmark-runner.properties" />
+        <property name="jmeterLocation" value="${ps.jmeter.dir}" />
+    </bean>
+    <bean id="jmeterconfig" class="com.boundless.benchmark.jmeter.JMeterConfigurator">                
+        <property name="jmeterLocation" value="${ps.jmeter.dir}" />
+    </bean>
+    
     <bean id="benchmark-components" class="java.util.ArrayList">
     	<constructor-arg>
     		<list>
-    			<ref bean="shp-ds" />
-    			<ref bean="del-ws" />
+                        <ref bean="jmeterconfig"/>
+                        <ref bean="shp-ds" />
+                        <ref bean="jmeterrunner"/>
+                        <ref bean="del-ws" />
     			<ref bean="db-ds" />
     		</list>
     	</constructor-arg>
