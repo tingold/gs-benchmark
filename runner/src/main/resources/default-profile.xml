@@ -8,32 +8,30 @@
         http://www.springframework.org/schema/context
         http://www.springframework.org/schema/context/spring-context.xsd">
 
-    <context:property-placeholder location="file:benchmark-runner.properties"/>
+    <context:property-placeholder location="file:benchmark-runner.properties" />
     
-    <bean id="shp-ds" class="com.boundless.benchmark.ShapefileBasedDataStoreCreator">
-    	<property name="workspaceName" value="${shpWorkspaceName}" />
-    	<property name="datastoreName" value="${shpDatastoreName}" />
-    	<property name="shapefileZipLocation" value="${shpZipLocation}" />
+    <bean id="general-properties" abstract="true">
     	<property name="geoserverHostAndPort" value="${geoserverHostAndPort}" />
-    	<property name="username" value="${geoserverUsername}" />
-    	<property name="password" value="${geoserverPassword}" />
+    	<property name="geoserverUsername" value="${geoserverUsername}" />
+    	<property name="geoserverPassword" value="${geoserverPassword}" />
+    	<property name="workspaceName" value="${workspaceName}" />
     </bean>
     
-    <bean id="del-ws" class="com.boundless.benchmark.GeoserverCleaner">
-    	<property name="workspaceName" value="${shpWorkspaceName}" />
-    	<property name="geoserverHostAndPort" value="${geoserverHostAndPort}" />
-    	<property name="username" value="${geoserverUsername}" />
-    	<property name="password" value="${geoserverPassword}" />
+    <bean id="shp-ds" parent="general-properties" class="com.boundless.benchmark.ShapefileBasedDataStoreCreator">
+    	<property name="datastoreName" value="${shpDatastoreName}" />
+     	<property name="shapefileZipLocation" value="${srcShapefile}" />
     </bean>
     
-    <bean id="db-ds" class="com.boundless.benchmark.DatabaseBasedDataStoreCreator">
-    	<property name="workspaceName" value="${shpWorkspaceName}" />
-    	<property name="datastoreName" value="${shpDatastoreName}" />
-    	<property name="shapefileZipLocation" value="${shpZipLocation}" />
-    	<property name="geoserverHostAndPort" value="${geoserverHostAndPort}" />
-    	<property name="username" value="${geoserverUsername}" />
-    	<property name="password" value="${geoserverPassword}" />
-    	<property name="jdbcTemplate" ref="jdbcTemplate" />
+    <bean id="del-ws" parent="general-properties" class="com.boundless.benchmark.GeoserverCleaner" />
+    
+    <bean id="db-ds" parent="general-properties" class="com.boundless.benchmark.DatabaseBasedDataStoreCreator">
+    	<property name="datastoreName" value="${dbDatastoreName}" />
+    	<property name="shapefileZipLocation" value="${srcShapefile}" />
+    	<property name="dbHost" value="${dbHost}" />
+    	<property name="dbPort" value="${dbPort}" />
+    	<property name="dbName" value="${dbName}" />
+    	<property name="dbUsername" value="${dbUsername}" />
+    	<property name="dbPassword" value="${dbPassword}" />
     </bean>
     
     <bean id="jmeterrunner" class="com.boundless.benchmark.jmeter.JMeterRunner">
@@ -48,23 +46,17 @@
     <bean id="benchmark-components" class="java.util.ArrayList">
     	<constructor-arg>
     		<list>
+<<<<<<< HEAD
                         <ref bean="jmeterconfig"/>
                         <ref bean="shp-ds" />
                         <ref bean="jmeterrunner"/>
                         <ref bean="del-ws" />
+=======
+    			<ref bean="shp-ds" />
+>>>>>>> FETCH_HEAD
     			<ref bean="db-ds" />
+    			<ref bean="del-ws" />
     		</list>
     	</constructor-arg>
-    </bean>
-    
-    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
-        <property name="driverClassName" value="${jdbc.driverClassName}"/>
-        <property name="url" value="${jdbc.url}"/>
-        <property name="username" value="${jdbc.username}"/>
-        <property name="password" value="${jdbc.password}"/>
-    </bean>
-    
-    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
-    	<property name="dataSource" ref="dataSource" />
     </bean>
 </beans>
