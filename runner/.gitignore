@@ -1,3 +1,5 @@
 /.settings
 /benchmark-runner.properties
-/data
+/target
+/*.log
+/*.jtl
