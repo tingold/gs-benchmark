@@ -75,31 +75,32 @@ public class ShapefileBasedDataStoreCreator extends GeoserverCommunicator {
 		// If the workspace exists, remove from Geoserver so that we start
 		// from a clean slate.
 		if (!this.checkIfWorkspaceExists(workspaceName)) {
-			logger.info("Workspace " + workspaceName + " exists.");
+			logger.info("Workspace [" + workspaceName + "] exists.");
 			if (!this.deleteWorkspace(workspaceName)) {
-				throw new Exception("Workspace " + workspaceName
-						+ " could not be deleted.");
+				throw new Exception("Workspace [" + workspaceName
+						+ "] could not be deleted.");
 			} else {
-				logger.info("Workspace " + workspaceName + " was deleted.");
+				logger.info("Workspace [" + workspaceName + "] was deleted.");
 			}
 		} else {
-			logger.info("Workspace " + workspaceName + " does not exists.");
+			logger.info("Workspace [" + workspaceName + "] does not exists.");
 		}
 
 		// Need the workspace before we can create a data store.
 		if (!this.createWorkspace(workspaceName)) {
-			logger.info("Workspace " + workspaceName + " could not be created.");
+			logger.info("Workspace [" + workspaceName
+					+ "] could not be created.");
 		} else {
-			logger.info("Workspace " + workspaceName + " was created.");
+			logger.info("Workspace [" + workspaceName + "] was created.");
 		}
 
 		// Now that the workspace exists, create the data store.
-		if (!this.createShapefileBackedDataStore(workspaceName, datastoreName,
+		if (!this.loadDataStore(workspaceName, datastoreName,
 				shapefileZipLocation)) {
-			logger.info("Data store " + datastoreName
-					+ " could not be created.");
+			logger.info("Data store [" + datastoreName
+					+ "] could not be created.");
 		} else {
-			logger.info("Data store " + datastoreName + " was created.");
+			logger.info("Data store [" + datastoreName + "] was created.");
 		}
 
 		return new Object();
