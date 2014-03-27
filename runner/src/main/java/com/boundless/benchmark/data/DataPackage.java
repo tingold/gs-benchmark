@@ -50,10 +50,10 @@ public class DataPackage {
            logger.debug(props.getProperty("data.layer.type").toUpperCase());
            this.dataType = DataType.valueOf(props.getProperty("data.layer.type").toUpperCase());
            
-           String filename = properties.getPath()+props.getProperty("data.layer.filenames");
+           String filename = properties.getParentFile().getCanonicalPath()+File.separator+props.getProperty("data.layer.filename");
            this.dataFile = new File(filename);
            
-           String style = properties.getPath()+props.getProperty("data.layer.style");
+           String style = properties.getParentFile().getCanonicalPath()+File.separator+props.getProperty("data.layer.style");
            this.sld = new File(style);
         }
         
