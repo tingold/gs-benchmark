@@ -1,43 +1,105 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns:context="http://www.springframework.org/schema/context"
-    xsi:schemaLocation="
-        http://www.springframework.org/schema/beans
-        http://www.springframework.org/schema/beans/spring-beans.xsd
-        http://www.springframework.org/schema/context
-        http://www.springframework.org/schema/context/spring-context.xsd">
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:camel="http://camel.apache.org/schema/spring"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd">
+
+
+    
 
     <context:property-placeholder location="file:benchmark-runner.properties" />
     
-    <bean id="general-properties" abstract="true">
-    	<property name="geoserverHostAndPort" value="${geoserverHostAndPort}" />
-    	<property name="geoserverUsername" value="${geoserverUsername}" />
-    	<property name="geoserverPassword" value="${geoserverPassword}" />
-    	<property name="workspaceName" value="${shpWorkspaceName}" />
+    <camel:camelContext xmlns="http://camel.apache.org/schema/spring">
+        
+    <camel:errorHandler id="xsltErrorHandler" redeliveryPolicyRef="xsltPolicy"/>
+ 
+    <camel:redeliveryPolicyProfile id="xsltPolicy"  maximumRedeliveries="-1" redeliveryDelay="5000" retryAttemptedLogLevel="DEBUG"/>
+                        
+        <camel:route id="reportingRoute" errorHandlerRef="xsltErrorHandler">                      
+            <camel:from uri="file:./?antInclude=*.jtl&amp;readLock=markerFile&amp;idempotent=true"/>            
+                <!--<camel:doTry>            -->
+                <camel:to uri="xslt:xslt/jmeter-results-report_21.xsl"/>
+                <setProperty propertyName="file.name">
+                    <simple>report-${file:onlyname.noext}.html</simple>
+                </setProperty>
+                <camel:to uri="file:./results?autoCreate=true"/>
+                <camel:log message="JTL transformed to HTML Report" loggingLevel="INFO"/>             
+        </camel:route>
+        
+        <camel:route id="cleanupRoute">
+            <camel:from uri="seda:processingComplete"/>
+            <camel:to uri="bean:del-ws?method=process" />          
+            <!--<camel:to uri="bean:camelPhaseAssistant?method=tearDownComplete"/>    -->     
+        </camel:route>
+               
+        <camel:route id="processingWatcher">
+            <camel:from uri="seda:jobStatus"/>
+            <camel:to uri="bean:jobWatcher?method=process"/>
+        </camel:route>
+        
+        <camel:route id="processingRoute" autoStartup="false">            
+            <camel:from uri="file:../data?antInclude=**/*.jmx&amp;recursive=true&amp;noop=true"/>                                    
+            <camel:to uri="bean:jmeterrunner?method=process"/>                     
+        </camel:route>
+        
+        <camel:route id="setupRoute">   
+            <camel:from uri="timer://runOnce?repeatCount=1&amp;delay=5000"/>
+            <camel:to uri="bean:jmeterconfig?method=process"/>
+            <camel:to uri="bean:shp-ds?method=process"/>
+            <camel:to uri="bean:db-ds?method=process" />
+            <camel:to uri="bean:camelPhaseAssistant?method=setupComplete"/>            
+            <camel:log message="Setup Completed" loggingLevel="INFO"/>
+        </camel:route>        
+    </camel:camelContext>
+    
+    <bean id="gsPublisher" class="it.geosolutions.geoserver.rest.GeoServerRESTPublisher">
+        <constructor-arg index="0" value="${geoserverURL}"/>
+        <constructor-arg index="1" value="${geoserverUsername}"/>
+        <constructor-arg index="2" value="${geoserverPassword}"/>
     </bean>
     
-    <bean id="shp-ds" parent="general-properties" class="com.boundless.benchmark.ShapefileBasedDataStoreCreator">
-        <property name="workspaceName" value="${shpWorkspaceName}" />
+    <bean id="gsReader" class="it.geosolutions.geoserver.rest.GeoServerRESTReader">
+        <constructor-arg index="0" value="${geoserverURL}"/>
+        <constructor-arg index="1" value="${geoserverUsername}"/>
+        <constructor-arg index="2" value="${geoserverPassword}"/>
+    </bean>
+    
+    <bean id="jobWatcher" class="com.boundless.benchmark.camel.JobWatcher"/>
+    <bean id="camelPhaseAssistant" class="com.boundless.benchmark.camel.CamelPhaseAssistant"/>        
+    
+    
+    <bean id="shp-ds" class="com.boundless.benchmark.ShapefileBasedDataStoreCreator">
+        <property name="workspaceName" value="${test.workspace}" />
         <property name="dataDir" value="${local.data.dir}"/>
-    	<!-- <property name="datastoreName" value="${shpDatastoreName}" /> -->
-     	<!--<property name="shapefileZipLocation" value="${srcShapefile}" />-->
+        <property name="publisher" ref="gsPublisher"/>
+        <property name="reader" ref="gsReader"/>
     </bean>
     
-    <bean id="del-ws" parent="general-properties" class="com.boundless.benchmark.GeoserverCleaner" />
-    
-    <bean id="db-ds" parent="general-properties" class="com.boundless.benchmark.DatabaseBasedDataStoreCreator">
-    	<property name="datastoreName" value="${dbDatastoreName}" />
-    	<property name="shapefileZipLocation" value="${srcShapefile}" />
-    	<property name="dbHost" value="${dbHost}" />
-    	<property name="dbPort" value="${dbPort}" />
-    	<property name="dbName" value="${dbName}" />
-    	<property name="dbUsername" value="${dbUsername}" />
-    	<property name="dbPassword" value="${dbPassword}" />
+    <bean id="del-ws" class="com.boundless.benchmark.GeoserverCleaner">
+        <property name="workspaceName" value="${test.workspace}" />        
+        <property name="publisher" ref="gsPublisher"/>
+        <property name="reader" ref="gsReader"/>
+        <property name="deleteOnExit" value="${deleteOnExit}"/>
     </bean>
     
-    <bean id="jmeterrunner" class="com.boundless.benchmark.jmeter.JMeterRunner">
-        <property name="testFile" value="${ps.jmeter.testfile}" />
+    <bean id="db-ds" class="com.boundless.benchmark.DatabaseBasedDataStoreCreator">
+        <property name="dataDir" value="${local.data.dir}"/>
+        <property name="workspaceName" value="${test.workspace}"/>
+        <property name="dbHost" value="${dbHost}" />
+        <property name="dbPort" value="${dbPort}" />
+        <property name="dbName" value="${dbName}" />
+        <property name="dbUsername" value="${dbUsername}" />
+        <property name="dbPassword" value="${dbPassword}" />
+        <property name="publisher" ref="gsPublisher"/>
+        <property name="reader" ref="gsReader"/>
+    </bean>
+    
+    <bean id="jmeterrunner" class="com.boundless.benchmark.jmeter.JMeterRunner">        
         <property name="propertiesFile" value="benchmark-runner.properties" />
         <property name="jmeterLocation" value="${ps.jmeter.dir}" />
     </bean>
@@ -45,15 +107,5 @@
         <property name="jmeterLocation" value="${ps.jmeter.dir}" />
     </bean>
     
-    <bean id="benchmark-components" class="java.util.ArrayList">
-    	<constructor-arg>
-    		<list>
-                        <ref bean="jmeterconfig"/>
-                        <ref bean="shp-ds" />
-                        <ref bean="db-ds" />
-                        <ref bean="jmeterrunner"/>
-                        <ref bean="del-ws" />
-    		</list>
-    	</constructor-arg>
-    </bean>
+    
 </beans>

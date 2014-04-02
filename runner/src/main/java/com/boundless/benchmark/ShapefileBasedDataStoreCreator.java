@@ -7,6 +7,7 @@ import com.boundless.benchmark.data.DataFinder;
 import com.boundless.benchmark.data.DataPackage;
 import java.io.File;
 import java.util.List;
+import org.apache.camel.Exchange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,73 +38,52 @@ public class ShapefileBasedDataStoreCreator extends GeoserverCommunicator {
         this.workspaceName = workspaceName;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.boundless.benchmark.BenchmarkComponent#process()
-     */
-    @Override
-    public Object process() throws Exception {
 
-        List<DataPackage> packageList = DataFinder.findData(new File(this.dataDir));
-
-        this.ensureWorkspace(workspaceName);
-        
-        for (DataPackage dp : packageList) {
-            if (dp.getDataType() == DataPackage.DataType.VECTOR && dp.getEncoding() == DataPackage.Encoding.ZIP) {
-                this.loadZip(dp);
-            }
-
-        }        
-        return new Object();
-    }
 
     protected void loadZip(DataPackage dp) 
-    {                 
+    { 
         try{
-        if (!this.loadDataStore(workspaceName, dp.getName(),dp.getDataFile().getCanonicalPath())) 
-        {
-            logger.info("Data store [{}] could not be created.", dp.getName());
-        }              
-        else 
-        {
-            logger.info("Data store [{}] was created.", dp.getName());
-        }
+            
+            String styleName = dp.getName()+"_style";
+            boolean publishStyle = false;
+            try
+            {
+                if(this.getReader().getStyles().getNames().contains(styleName))
+                {
+                    publishStyle = this.getPublisher().publishStyle(dp.getSld(),styleName);
+                    logger.info("Published style {}", styleName);
+                }
+                else
+                {
+                    logger.info("Style {} already exists", styleName);
+                    publishStyle = true;
+                }
+            }
+            catch(Exception ex)
+            {
+                logger.error("Error uploading style: {}", ex.getMessage());
+            }
+            //if the style insert succeeded then assign the style to the new layer
+            if(publishStyle)
+            {
+                this.getPublisher().publishShp(workspaceName,dp.getName()+"_store", dp.getName(), dp.getDataFile(), dp.getSRS(), styleName);
+                logger.info("Published layer {} with default style {}", dp.getName(), styleName);
+            }
+            //otherwise just leave it as default
+            else
+            {
+                this.getPublisher().publishShp(workspaceName,dp.getName()+"_store", dp.getName(), dp.getDataFile());
+                logger.info("Published layer {} with no default style", dp.getName());
+            }
+                                    
         }
         catch(Exception ex)
         {
-            logger.error("Error while attempting to create datastore [{}]: {}", dp.getName(), ex.getMessage());
-        }
-        
-        
-    }
-
-    protected void ensureWorkspace(String workspace) {
-                // If the workspace exists, remove from Geoserver so that we start
-        // from a clean slate.
-        try {
-            if (!this.checkIfWorkspaceExists(workspace)) {
-                logger.info("Workspace [{}] exists.", workspace);
-
-                if (!this.deleteWorkspace(workspace)) {
-                    throw new Exception("Workspace ["+workspace+"] could not be deleted.");
-                } else {
-                    logger.info("Workspace [{}] was deleted.", workspace);
-                }
-            } else {
-                logger.info("Workspace [" + workspace + "] does not exists.");
-            }
-
-            // Need the workspace before we can create a data store.
-            if (!this.createWorkspace(workspace)) {
-                logger.info("Workspace [{}] could not be created.", workspace);
-            } else {
-                logger.info("Workspace [{}] was created.", workspace);
-            }
-        } catch (Exception ex) {
-            logger.error("Error ensuring workspace {}: {}", workspace, ex.getMessage());
+            logger.error("Error publishing datapackage {}: {}", dp.getName(), ex.getMessage());
         }
     }
+
+    
 
     /**
      * @return the dataDir
@@ -118,4 +98,22 @@ public class ShapefileBasedDataStoreCreator extends GeoserverCommunicator {
     public void setDataDir(String dataDir) {
         this.dataDir = dataDir;
     }
+
+    public void process(Exchange exchng) throws Exception {
+       
+        logger.info("Processing Shapefiles....");
+        List<DataPackage> packageList = DataFinder.findData(new File(this.dataDir));
+
+        if(!this.getReader().getWorkspaceNames().contains(this.workspaceName))
+        {
+            this.getPublisher().createWorkspace(workspaceName);
+        }
+        
+        for (DataPackage dp : packageList) {
+            if (dp.getDataType() == DataPackage.DataType.VECTOR && dp.getEncoding() == DataPackage.Encoding.ZIP) {
+                this.loadZip(dp);
+            }
+
+        }        
+       }
 }

@@ -3,26 +3,28 @@
  */
 package com.boundless.benchmark;
 
-import java.util.List;
+import org.apache.camel.spring.Main;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
  * @author Soumya Sengupta
  * 
  */
-public class BenchmarkRunner {
-	final static Logger logger = LoggerFactory.getLogger(BenchmarkRunner.class);
-
+public class BenchmarkRunner{
+	
+        final static Logger logger = LoggerFactory.getLogger(BenchmarkRunner.class);
+        
+        private Main main;
+        
+        
 	/**
 	 * @param args
 	 */
 	@SuppressWarnings("resource")
 	public static void main(String[] args) {
-		String profile = "default-profile.xml";
+		String profile = "classpath:/camelContext.xml";
 
 		if (args.length > 0) {
 			profile = args[0];
@@ -30,24 +32,21 @@ public class BenchmarkRunner {
 
 		logger.info("Initializing benchmark runner with profile [" + profile
 				+ "]");
-
-		ApplicationContext ctx = new ClassPathXmlApplicationContext(profile);
-		@SuppressWarnings("unchecked")
-		List<IBenchmarkComponent> components = (List<IBenchmarkComponent>) ctx
-				.getBean("benchmark-components");
-
-		logger.info("Starting benchmarking session...");
-		try {
-			for (IBenchmarkComponent component : components) {
-				logger.info("Running: " + component.getId());
-				component.process();
-			}
-		} catch (Exception e) {
-			logger.info("Error while running benchmarking session, stack trace follows");
-			e.printStackTrace();
-		} finally {
-			logger.info("Completed benchmarking session...");
-		}
+                String[] camelArgs = {profile};
+                Main main = new Main();
+                try{
+                    main.setFileApplicationContextUri(profile);
+                    main.enableHangupSupport();
+                    main.run();
+                    
+                }
+                catch(Exception ex)  
+                {
+                    logger.error(ex.getMessage());
+                }
+            logger.info("Completed benchmarking session...");
+        
 	}
+
 
 }

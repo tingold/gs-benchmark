@@ -3,6 +3,7 @@
  */
 package com.boundless.benchmark;
 
+import org.apache.camel.Exchange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,9 +13,11 @@ import org.slf4j.LoggerFactory;
  */
 public class GeoserverCleaner extends GeoserverCommunicator {
 	final static Logger logger = LoggerFactory
-			.getLogger(ShapefileBasedDataStoreCreator.class);
+			.getLogger(GeoserverCleaner.class);
 
 	private String workspaceName;
+        
+        private boolean deleteOnExit = true;
 
 	/**
 	 * @return the workspaceName
@@ -31,29 +34,27 @@ public class GeoserverCleaner extends GeoserverCommunicator {
 		this.workspaceName = workspaceName;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.boundless.benchmark.BenchmarkComponent#process()
-	 */
-	@Override
-	public Object process() throws Exception {
-		String workspaceName = this.getWorkspaceName();
 
-		// If the workspace exists, remove from Geoserver so that we start
-		// from a clean slate.
-		if (!this.checkIfWorkspaceExists(workspaceName)) {
-			logger.info("Workspace " + workspaceName + " exists.");
-			if (!this.deleteWorkspace(workspaceName)) {
-				throw new Exception("Workspace " + workspaceName
-						+ " could not be deleted.");
-			} else {
-				logger.info("Workspace " + workspaceName + " was deleted.");
-			}
-		} else {
-			logger.info("Workspace " + workspaceName + " does not exists.");
-		}
 
-		return new Object();
-	}
+    public void process(Exchange exchng) throws Exception 
+    {
+        if(this.deleteOnExit)
+        {
+            this.getPublisher().removeNamespace(workspaceName, true);    
+        }
+    }
+
+    /**
+     * @return the deleteOnExit
+     */
+    public boolean isDeleteOnExit() {
+        return deleteOnExit;
+    }
+
+    /**
+     * @param deleteOnExit the deleteOnExit to set
+     */
+    public void setDeleteOnExit(boolean deleteOnExit) {
+        this.deleteOnExit = deleteOnExit;
+    }
 }

@@ -3,13 +3,14 @@
  */
 package com.boundless.benchmark;
 
+import org.apache.camel.Processor;
+
 
 /**
  * @author Soumya Sengupta
  * 
  */
-public interface IBenchmarkComponent {
+public interface IBenchmarkComponent extends Processor{
 	public String getId();
 
-	public Object process() throws Exception;
 }

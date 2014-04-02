@@ -10,6 +10,7 @@ import com.boundless.benchmark.AbstractBenchmarkComponent;
 import java.io.File;
 import java.io.FilenameFilter;
 import net.lingala.zip4j.core.ZipFile;
+import org.apache.camel.Exchange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,14 +29,18 @@ public class JMeterConfigurator extends AbstractBenchmarkComponent{
      * @return
      * @throws Exception 
      */
-    public Object process() throws Exception 
-    {
-     
+    @Override
+   public void process(Exchange exchange) throws Exception {
+    
+       logger.debug("Getting called!");
+       
+        exchange.setOut(exchange.getIn());
+        exchange.getOut().copyFrom(exchange.getIn());
         
         File jm = new File(jmeterLocation+File.separator+"apache-jmeter-2.11"+File.separator+"bin"+File.separator+"jmeter");
         if(jm.exists())
         {
-            return null;
+            return;
         }
         File f = new File(jmeterLocation);
         
@@ -57,7 +62,7 @@ public class JMeterConfigurator extends AbstractBenchmarkComponent{
             
             }
         }        
-        return true;
+ 
     }
 
     /**
@@ -73,6 +78,8 @@ public class JMeterConfigurator extends AbstractBenchmarkComponent{
     public void setJmeterLocation(String jmeterLocation) {
         this.jmeterLocation = jmeterLocation;
     }
+
+   
     
     class JMeterFilter implements FilenameFilter
     {

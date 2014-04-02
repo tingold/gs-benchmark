@@ -1,5 +1,7 @@
 /.settings
 /benchmark-runner.properties
-/target
+/target/*
 /*.log
 /*.jtl
+/results/*
+/.camel/*

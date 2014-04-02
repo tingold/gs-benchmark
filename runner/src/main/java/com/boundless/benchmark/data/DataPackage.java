@@ -31,6 +31,8 @@ public class DataPackage {
     
     private File dataFile; 
     
+    private String SRS;
+    
     public DataPackage(){}
     
     public DataPackage(File properties) throws IOException
@@ -41,6 +43,8 @@ public class DataPackage {
            props.load(new FileInputStream(properties));
            //parse name
            this.name = props.getProperty("data.layer.name");          
+           
+           this.SRS = props.getProperty("data.layer.srs");
           
            //parse encoding
            logger.debug(props.getProperty("data.layer.encoding").toUpperCase());           
@@ -128,6 +132,20 @@ public class DataPackage {
      */
     public void setDataFile(File dataFile) {
         this.dataFile = dataFile;
+    }
+
+    /**
+     * @return the SRS
+     */
+    public String getSRS() {
+        return SRS;
+    }
+
+    /**
+     * @param SRS the SRS to set
+     */
+    public void setSRS(String SRS) {
+        this.SRS = SRS;
     }
     
     
