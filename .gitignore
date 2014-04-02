@@ -2,3 +2,7 @@
 raw-jmx/Recording Controller.jmx
 /tools/JMXParameterExtractor/target/
 runner/jmeter.log
+
+runner/target/maven-archiver/pom.properties
+
+runner/target/maven-archiver/pom.properties
