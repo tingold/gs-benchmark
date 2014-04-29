@@ -65,7 +65,7 @@ public class JMeterRunner implements IBenchmarkComponent, CamelContextAware {
         args.add("-t");
         args.add(testfile.getAbsoluteFilePath());
         
-        StringBuilder command = new StringBuilder(jm.getCanonicalPath()).append(" -n  -t ").append(testfile.getAbsoluteFilePath());
+        //StringBuilder command = new StringBuilder(jm.getCanonicalPath()).append(" -n  -t ").append(testfile.getAbsoluteFilePath());
         Properties props = new Properties();
         props.load(new FileInputStream(propertiesFile));
         
@@ -73,16 +73,28 @@ public class JMeterRunner implements IBenchmarkComponent, CamelContextAware {
         for (Object obj : props.keySet()) {
             String key = (String) obj;
             if (key.startsWith("ps.jmeter")) {
-                command.append(" -J").append(key).append("=").append(props.getProperty(key));
+                //command.append(" -J").append(key).append("=").append(props.getProperty(key));
                 args.add("-J"+key+"="+props.getProperty(key));
             }
         }
-        command.append(" -J").append("ps.report.name=").append(String.valueOf(System.currentTimeMillis())).append(".jtl");
-        args.add("-J"+"ps.report.name="+String.valueOf(System.currentTimeMillis())+".jtl");
+        //command.append(" -J").append("ps.report.name=").append(String.valueOf(System.currentTimeMillis())).append(".jtl");
+        String outfileName = String.valueOf(System.currentTimeMillis());
+        //args.add("-J"+"ps.report.name="+outfileName+".jtl");
+        args.add("-Jjmeter.save.saveservice.data_type=true");
+        args.add("-Jjmeter.save.saveservice.label=true");
+        args.add("-Jjmeter.save.saveservice.response_code=true");
+        args.add("-Jjmeter.save.saveservice.response_data=true");
+        args.add("-Jjmeter.save.saveservice.response_message=true");
+        args.add("-Jjmeter.save.saveservice.successful=true");
+        args.add("-Jjmeter.save.saveservice.thread_name=true");
+        args.add("-Jjmeter.save.saveservice.time=true");
+        
+        args.add("-l");
+        args.add(outfileName+".jtl");
         
         JMeterJob job = new JMeterJob();
         job.setArgList(args);
-        job.setArgs(command.toString());
+        //job.setArgs(command.toString());
         job.setTemplate(cc.createProducerTemplate());
         
         Thread thread = new Thread(job);

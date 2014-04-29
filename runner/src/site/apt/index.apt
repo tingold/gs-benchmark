@@ -1,0 +1,24 @@
+ ------
+ Introduction
+ ------
+ Tom Ingold
+ ------
+ 2014-04-21
+ 
+
+Benchmark Runner
+
+    The Benchmark Runner is a testing framework designed to provide and raw 
+    performance evaluation of a GeoServer instance (or cluster). To create a clean
+    benchmark of the target system this utility performs the following tasks:
+
+    * Configures GeoServer with various data formats via the REST API
+
+    * Executes JMeter tests against the loaded layers
+
+    * Transforms the results into human readable format
+
+    * Removes the configured data
+
+ Check out how to {{{./dataPackages.html}setup data}}, create new {{{./jmeter.html}JMeter tests}}, {{{./running.html}run}} 
+the tool and understand the {{{./results.html}results}}. 

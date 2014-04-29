@@ -1,0 +1,13 @@
+ ------
+ JMeter
+ ------
+ Tom Ingold
+ ------
+ 2014-04-21
+
+JMeter Tests
+
+Result Format
+ JMeter tests should output results in CSV format and output fields show in the image below:
+
+[./images/data-writer-output.png] Output format

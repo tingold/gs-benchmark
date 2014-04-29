@@ -15,28 +15,24 @@
     <context:property-placeholder location="file:benchmark-runner.properties" />
     
     <camel:camelContext xmlns="http://camel.apache.org/schema/spring">
-        
-    <camel:errorHandler id="xsltErrorHandler" redeliveryPolicyRef="xsltPolicy"/>
- 
-    <camel:redeliveryPolicyProfile id="xsltPolicy"  maximumRedeliveries="-1" redeliveryDelay="5000" retryAttemptedLogLevel="DEBUG"/>
-                        
-        <camel:route id="reportingRoute" errorHandlerRef="xsltErrorHandler">                      
-            <camel:from uri="file:./?antInclude=*.jtl&amp;readLock=markerFile&amp;idempotent=true"/>            
-                <!--<camel:doTry>            -->
-                <camel:to uri="xslt:xslt/jmeter-results-report_21.xsl"/>
-                <setProperty propertyName="file.name">
-                    <simple>report-${file:onlyname.noext}.html</simple>
-                </setProperty>
-                <camel:to uri="file:./results?autoCreate=true"/>
-                <camel:log message="JTL transformed to HTML Report" loggingLevel="INFO"/>             
+           
+      
+        <camel:route autoStartup="false" id="resultRoute">
+            <camel:from uri="file:./?antInclude=*.jtl&amp;readLock=markerFile&amp;idempotent=true"/>                            
+            <camel:split streaming="true">
+                <camel:tokenize token="\n" group="100" />
+                <camel:unmarshal ref="bindy"/>
+                <camel:to uri="bean:resultProcessor?method=processStat"/>                                
+            </camel:split>
         </camel:route>
-        
-        <camel:route id="cleanupRoute">
-            <camel:from uri="seda:processingComplete"/>
-            <camel:to uri="bean:del-ws?method=process" />          
-            <!--<camel:to uri="bean:camelPhaseAssistant?method=tearDownComplete"/>    -->     
+      
+      
+        <camel:route id="cleanupRoute">        
+            <camel:from uri="seda:cleanUp"/>    
+            <camel:to uri="bean:del-ws?method=process" />              
         </camel:route>
-               
+            
+                  
         <camel:route id="processingWatcher">
             <camel:from uri="seda:jobStatus"/>
             <camel:to uri="bean:jobWatcher?method=process"/>
@@ -46,38 +42,53 @@
             <camel:from uri="file:../data?antInclude=**/*.jmx&amp;recursive=true&amp;noop=true"/>                                    
             <camel:to uri="bean:jmeterrunner?method=process"/>                     
         </camel:route>
-        
+                
         <camel:route id="setupRoute">   
             <camel:from uri="timer://runOnce?repeatCount=1&amp;delay=5000"/>
             <camel:to uri="bean:jmeterconfig?method=process"/>
             <camel:to uri="bean:shp-ds?method=process"/>
             <camel:to uri="bean:db-ds?method=process" />
-            <camel:to uri="bean:camelPhaseAssistant?method=setupComplete"/>            
+            <camel:to uri="bean:raster-creator?method=process"/>           
             <camel:log message="Setup Completed" loggingLevel="INFO"/>
+            <camel:to uri="controlbus:route?routeId=processingRoute&amp;action=start"/>
         </camel:route>        
     </camel:camelContext>
     
+    
+    
+    <bean id="bindy" class="org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat">
+        <constructor-arg value="com.boundless.benchmark.data.JTFLine" />
+    </bean>
+    <bean id="resultProcessor" class="com.boundless.benchmark.data.ResultProcessor"/>
+    
     <bean id="gsPublisher" class="it.geosolutions.geoserver.rest.GeoServerRESTPublisher">
-        <constructor-arg index="0" value="${geoserverURL}"/>
+        <constructor-arg index="0" value="${geoserverAdminServerURL}"/>
         <constructor-arg index="1" value="${geoserverUsername}"/>
         <constructor-arg index="2" value="${geoserverPassword}"/>
     </bean>
     
     <bean id="gsReader" class="it.geosolutions.geoserver.rest.GeoServerRESTReader">
-        <constructor-arg index="0" value="${geoserverURL}"/>
+        <constructor-arg index="0" value="${geoserverAdminServerURL}"/>
         <constructor-arg index="1" value="${geoserverUsername}"/>
         <constructor-arg index="2" value="${geoserverPassword}"/>
-    </bean>
+    </bean>    
     
     <bean id="jobWatcher" class="com.boundless.benchmark.camel.JobWatcher"/>
-    <bean id="camelPhaseAssistant" class="com.boundless.benchmark.camel.CamelPhaseAssistant"/>        
     
     
+    <bean id="raster-creator" class="com.boundless.benchmark.RasterBasedDataStoreCreator">
+        <property name="workspaceName" value="${test.workspace}" />
+        <property name="dataDir" value="${local.data.dir}"/>
+        <property name="publisher" ref="gsPublisher"/>
+        <property name="reader" ref="gsReader"/>
+        <property name="deployData" value="${deployData}"/>
+    </bean>
     <bean id="shp-ds" class="com.boundless.benchmark.ShapefileBasedDataStoreCreator">
         <property name="workspaceName" value="${test.workspace}" />
         <property name="dataDir" value="${local.data.dir}"/>
         <property name="publisher" ref="gsPublisher"/>
         <property name="reader" ref="gsReader"/>
+        <property name="deployData" value="${deployData}"/>
     </bean>
     
     <bean id="del-ws" class="com.boundless.benchmark.GeoserverCleaner">

@@ -1,0 +1,83 @@
+ ------
+ Running 
+ ------
+ Tom Ingold
+ ------
+ 2014-04-22
+
+Running
+
+ The Benchmark tool is a consists of a single jar file and cam be run by the simple command:
+---java -jar BenchmarkRunner-0.1-SNAPSHOT.jar 
+
+ The more complicated part is the configuration of the tool. The Benchmark tool will look for a file named
+<benchmark-runner.properties> in the same directory as the program was executed.  The file has a large number
+of options which can control many behaviors of the program. Make sure you are familiar with the overall
+operation of the Benchmark Runner before setting these.
+ They are broken up into 3 main sections:
+
+ * GeoServer Properties: settings that control the program's interaction with the 
+GeoServer(s)
+
+ * Database Properties: settings that allow the program to setup database layers in the target 
+Geoservers
+
+ * JMeter Properties: settings that control the programs interaction with JMeter
+
+
+*----------*--------------+------------------------------:
+| <<Property>> |   <<Nullable>>   |   <<Allowed Values>> |
+*----------*--------------+------------------------------:
+| geoserverUsername | no |   the name of a user with admin and REST interface access |
+*----------*--------------+------------------------------:
+| geoserverPassword | no |    the password of the above user |
+*----------*--------------+------------------------------:
+| geoserverAdminServerURL | no |   the URL of the <Admin> server, this may be different from the endpoint we wish to load test |
+*----------*--------------+------------------------------:
+| geoserverURL | no | the URL of the server we wish to load test |
+*----------*--------------+------------------------------:
+| deleteOnExit | no | whether or not we should delete layers we loaded after tests are completed, potentially we might want to use this as a automated data loader |
+*----------*--------------+------------------------------:
+| deployData | no | wheather or not we should attempt to configure {{{./dataPackages.html}data packages}} in GeoServer. Layers may have been loaded in a previous test run |
+*----------*--------------+------------------------------:
+| test.workspace | no | the workspace name where test data should be configured |
+*----------*--------------+------------------------------:
+| local.data.dir | no | the directory where the application should look for {{{./dataPackages.html}data packages}}|
+*----------*--------------+------------------------------:
+<<GeoServer Settings>> 
+
+*----------*--------------+------------------------------:
+| <<Property>> |   <<Nullable>>   |   <<Allowed Values>> |
+*----------*--------------+------------------------------:
+|  |   no   |      |
+*----------*--------------+------------------------------:
+|  | no     |       |
+*----------*--------------+------------------------------:
+|  | no    |         |
+*----------*--------------+------------------------------:
+|  | no     |     |
+*----------*--------------+------------------------------:
+|  | no     |             |
+*----------*--------------+------------------------------:
+|  | yes     |   |
+*----------*--------------+------------------------------:
+|  | yes     |  |
+*----------*--------------+------------------------------:
+ <<Database Properties>>
+
+*----------*--------------+------------------------------:
+| <<Property>> |   <<Nullable>>   |   <<Allowed Values>> |
+*----------*--------------+------------------------------:
+| ps.jmeter.dir | no | The directory where JMeter is installed |
+*----------*--------------+------------------------------:
+| ps.jmeter.gs.protocol | no | the protocol to use to execute GeoServer requests, either HTTP or HTTPS |
+*----------*--------------+------------------------------:
+| ps.jmeter.gs.host | no | The hostname or IP address where the target GeoServer is running |
+*----------*--------------+------------------------------:
+| ps.jmeter.gs.port | no | The port where the target GeoServer is listening |
+*----------*--------------+------------------------------:
+| ps.jmeter.gs.wms.path | no | The context path GeoServer is listening |
+*----------*--------------+------------------------------:
+| ps.jmeter.users | no | The number of threads to use to load test GeoServer  |
+*----------*--------------+------------------------------:
+<<JMeter Properties>>

@@ -3,14 +3,31 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.boundless.ps</groupId>
     <artifactId>BenchmarkRunner</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-
+    <version>0.1-SNAPSHOT</version>
+    <contributors>
+        <contributor>
+            <name>Tom Ingold</name>
+            <email>tingold@boundlessgeo.com</email>
+        </contributor>
+        <contributor>
+            <name>Soumya Sengupta</name>
+            <email>ssengupta@boundlessgeo.com</email>           
+        </contributor>
+    </contributors>
+    <organization>
+        <name>Boundless</name>
+        <url>http://boundlessgeo.com</url>
+    </organization>
     <repositories>
         <repository>
             <id>geo-solutions</id>
             <url>http://maven.geo-solutions.it/</url>
         </repository>
     </repositories>
+    <scm>
+        <connection>scm:git:https://github.com/tingold/gs-benchmark</connection>
+        <url>https://github.com/tingold/gs-benchmark</url>
+    </scm>
 
     <properties>
 
@@ -33,7 +50,33 @@
         <junit.version>4.11</junit.version>
 
     </properties>
-
+    <issueManagement>
+        <system>jira</system>
+        <url>https://boundlessps.atlassian.net/browse/BENCH</url>
+    </issueManagement>    
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
+                <version>2.9</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <configuration>
+                    <minmemory>128m</minmemory>
+                    <maxmemory>512</maxmemory>          
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jxr-plugin</artifactId>
+                <version>2.4</version>
+            </plugin>
+        </plugins>
+    </reporting>    
     <dependencies>
         <!-- Spring and Transactions -->
         <dependency>
@@ -147,6 +190,16 @@
                     <groupId>org.slf4j</groupId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-bindy</artifactId>
+            <version>2.13.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math3</artifactId>
+            <version>3.2</version>
         </dependency>
     </dependencies>
     <build>

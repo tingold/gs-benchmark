@@ -35,12 +35,11 @@ public class JobWatcher
     @InOnly
     public void process(Exchange exchange)
     {
-        
-        
+                
         String id = exchange.getIn().getBody().toString();
         
         JobStatus status = JobStatus.valueOf(exchange.getIn().getHeader("status", String.class));
-        logger.info("Got Message from job {} with status {}", id, status.toString());
+        logger.debug("Got Message from job {} with status {}", id, status.toString());
         
         statusMap.put(id, status);
                
@@ -54,14 +53,14 @@ public class JobWatcher
         if(allComplete())
         {            
             logger.info("All jobs completed...");
-            template.sendBody("seda:processingComplete", "All jobs completed!");
+            template.sendBody("controlbus:route?routeId=resultRoute&action=start","");
         }
         
     }
     
     private boolean allComplete()
     {
-        if(statusMap.size() == 0){return false;}
+        if(statusMap.isEmpty()){return false;}
         
         for(String key: statusMap.keySet())
         {

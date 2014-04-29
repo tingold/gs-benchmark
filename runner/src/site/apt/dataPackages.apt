@@ -1,0 +1,40 @@
+ ------
+ Data  Packages
+ ------
+ Tom Ingold
+ ------
+ 2014-04-22
+
+Data Packages
+
+ Data Packages are groups of files used as test data. They are "discovered" by the framework
+and are loaded at runtime. Each package will be loaded into the target GeoServer as a layer
+and configured with values provided in the package file. 
+
+ There isn't any magic about them, they are simply a java properties file
+with several values as outlined below:
+
+*----------*--------------+------------------------------:
+| <<Property>> |   <<Nullable>>   |   <<Allowed Values>> |
+*----------*--------------+------------------------------:
+| data.layer.name |   no   |  any string (no spaces)     |
+*----------*--------------+------------------------------:
+| data.layer.type | no     | "raster" or "vector"        |
+*----------*--------------+------------------------------:
+| data.layer.encoding | no    | "ZIP" or "FLAT"            |
+*----------*--------------+------------------------------:
+| data.layer.format | no     | GEOTIF, SHAPFILE, WORLDFILE, or IMAGE_PYRAMID    |
+*----------*--------------+------------------------------:
+| data.layer.filename | no     | the location of the file                |
+*----------*--------------+------------------------------:
+| data.layer.style | yes     | the location of an SLD file to upload    |
+*----------*--------------+------------------------------:
+| data.layer.srs | yes     | any EPSG code, for instance <EPSG:4326>  |
+*----------*--------------+------------------------------:
+<<Data Package Properties>>
+
+  Certain combinations of these attributes are invalid and will be ignored by the code.
+For example you can't have a raster shapefile. Other things, like an invalid SRS will cause errors
+(albeit recoverable) in the code and will likely  
+
+ The file <<MUST>> be named <data-package.properties> in order for it to be discovered and loaded.

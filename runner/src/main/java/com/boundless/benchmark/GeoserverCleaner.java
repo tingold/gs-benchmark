@@ -4,6 +4,8 @@
 package com.boundless.benchmark;
 
 import org.apache.camel.Exchange;
+import org.apache.camel.Produce;
+import org.apache.camel.ProducerTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,9 +14,12 @@ import org.slf4j.LoggerFactory;
  * 
  */
 public class GeoserverCleaner extends GeoserverCommunicator {
-	final static Logger logger = LoggerFactory
-			.getLogger(GeoserverCleaner.class);
+	
+        final static Logger logger = LoggerFactory.getLogger(GeoserverCleaner.class);
 
+        @Produce
+        private ProducerTemplate template;
+        
 	private String workspaceName;
         
         private boolean deleteOnExit = true;
@@ -42,6 +47,7 @@ public class GeoserverCleaner extends GeoserverCommunicator {
         {
             this.getPublisher().removeNamespace(workspaceName, true);    
         }
+        template.sendBody("controlbus:language:simple?async=true", "${camelContext.stop()}");
     }
 
     /**

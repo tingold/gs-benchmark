@@ -31,6 +31,8 @@ public class DataPackage {
     
     private File dataFile; 
     
+    private DataFormat format;
+    
     private String SRS;
     
     public DataPackage(){}
@@ -59,6 +61,8 @@ public class DataPackage {
            
            String style = properties.getParentFile().getCanonicalPath()+File.separator+props.getProperty("data.layer.style");
            this.sld = new File(style);
+           
+           this.format = DataFormat.valueOf(props.getProperty("data.layer.format").toUpperCase());
         }
         
         
@@ -147,6 +151,20 @@ public class DataPackage {
     public void setSRS(String SRS) {
         this.SRS = SRS;
     }
+
+    /**
+     * @return the format
+     */
+    public DataFormat getFormat() {
+        return format;
+    }
+
+    /**
+     * @param format the format to set
+     */
+    public void setFormat(DataFormat format) {
+        this.format = format;
+    }
     
     
     
@@ -161,4 +179,13 @@ public class DataPackage {
         VECTOR,
         RASTER;
     } 
+    
+    public enum DataFormat
+    {
+        SHAPEFILE,
+        GEOTIF,
+        WORLDFILE,
+        IMAGE_PYRAMID
+    
+    }
 }

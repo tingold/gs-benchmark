@@ -27,6 +27,42 @@ public class DatabaseBasedDataStoreCreator extends GeoserverCommunicator {
 
     private JdbcTemplate jdbcTemplate;
 
+    
+        @Override
+    public void process(Exchange exchng) throws Exception {
+     List<DataPackage> packages = DataFinder.findData(new File(this.dataDir));
+
+     if(!this.getReader().getWorkspaceNames().contains(workspaceName))
+     {
+        this.getPublisher().createWorkspace(workspaceName);
+     }
+        for (DataPackage dp : packages) {
+            if (dp.getDataType().equals(DataPackage.DataType.VECTOR)
+                    && dp.getEncoding().equals(DataPackage.Encoding.ZIP)) {
+                
+                 //this.getPublisher().
+//                
+//                
+//                // Now we can create the data store.
+//                if (!this.createDatastore(workspaceName, dp.getName(), dbHost, dbPort,
+//                        dbUsername, dbPassword, dbName)) {
+//                    logger.info("Datastore [{}] could not be created.", dp.getName());
+//                } else {
+//                    logger.info("Datastore [{}] was created.", dp.getName());
+//                }
+//                // Now that the data store exists, load the data.
+//                if (!this.loadDataStore(workspaceName, dp.getName(),dp.getDataFile().getCanonicalPath())) {
+//                    logger.info("Data store [{}] could not be created.", dp.getName());
+//                } else {
+//                    logger.info("Data store [{}] was created.", dp.getName());
+//                }
+
+            }
+
+        }
+        
+    }
+    
     /**
      * @return the workspaceName
      */
@@ -144,39 +180,6 @@ public class DatabaseBasedDataStoreCreator extends GeoserverCommunicator {
         this.dataDir = dataDir;
     }
 
-    @Override
-    public void process(Exchange exchng) throws Exception {
-     List<DataPackage> packages = DataFinder.findData(new File(this.dataDir));
 
-     if(!this.getReader().getWorkspaceNames().contains(workspaceName))
-     {
-        this.getPublisher().createWorkspace(workspaceName);
-     }
-        for (DataPackage dp : packages) {
-            if (dp.getDataType().equals(DataPackage.DataType.VECTOR)
-                    && dp.getEncoding().equals(DataPackage.Encoding.ZIP)) {
-                
-//                this.getPublisher().
-//                
-//                
-//                // Now we can create the data store.
-//                if (!this.createDatastore(workspaceName, dp.getName(), dbHost, dbPort,
-//                        dbUsername, dbPassword, dbName)) {
-//                    logger.info("Datastore [{}] could not be created.", dp.getName());
-//                } else {
-//                    logger.info("Datastore [{}] was created.", dp.getName());
-//                }
-//                // Now that the data store exists, load the data.
-//                if (!this.loadDataStore(workspaceName, dp.getName(),dp.getDataFile().getCanonicalPath())) {
-//                    logger.info("Data store [{}] could not be created.", dp.getName());
-//                } else {
-//                    logger.info("Data store [{}] was created.", dp.getName());
-//                }
-
-            }
-
-        }
-        
-    }
 
 }

@@ -1,0 +1,14 @@
+ ------
+ Results
+ ------
+ Tom Ingold
+ ------
+ 2014-04-21
+
+Results 
+ The applications execution of the JMeter scripts will create output files with their result. It will
+then process the out put of all JMeter tests and generate a score in the <results.html> file located in the  <results> directory. 
+The score is calculated based on the number of errors and response times....<fill this in>
+
+ In order for any 3rd party JMeter scripts to produce output which is able to be parse they should adhere to the convensions described in 
+the {{{./jmeter.html}jmeter}} section of this documentation.

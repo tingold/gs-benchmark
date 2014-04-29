@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+        <title>
+            Load Test Results
+        </title>
+        <!-- Latest compiled and minified CSS -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+        <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css" />
+        <script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+        <script src="justgage.1.0.1.min.js"></script>
+        <script src="raphael.2.1.0.min.js"></script>
+        <script type="text/javascript" src="http://www.google.com/jsapi"></script>
+        <script type="text/javascript">
+            google.load('visualization', '1', {packages: ['gauge', 'corechart']});
+        </script>
+        <script>
+
+            var testResult;
+            $(document).ready(function() {
+
+            });
+
+            function loadData(json)
+            {
+                testResult = json;
+                updatePage();
+            }
+            function updatePage()
+            {
+                var introContent = "<ul>";
+                $.each(testResult.Tests, function(i, val)
+                {
+                    var content = "<div class=\"panel panel-default\">";
+                    content += "<div class=\"panel-heading\" id=\"" + val.Id + "\"><b>Tests &quot;" + val.Name + "&quot;</b></div>";
+                    content += "<div class=\"panel-body\">";
+                    content += "<div class=\"row\">";
+                    content += "<div class=\"span2\" id=\"graph-succ-"+val.Id+"\"></div>";
+                    
+                    content += "<div class=\"span2\" id=\"graph-time-"+val.Id+"\" />";
+                    content += "</div></div></div></div>";
+
+                    $("#summary").after(content);
+                    addStats(val.Id, val);
+                    introContent += "<li><a href=\"#" + val.Id + "\">Test Report &quot;" + val.Name + "&quot; </a></li>";
+
+                }
+                );
+                introContent += "</ul>";
+
+                var totalSucPct = testResult.TotalSuccesses / testResult.TotalRequests;
+                totalSucPct = Math.round(totalSucPct * 10000) / 100;
+                var durSecs = (Math.round(testResult.TestDuration * 100) / 100000)
+                var dailyRate = (86400 / durSecs) * testResult.TotalRequests;
+                dailyRate = Math.round(dailyRate);
+                var summary = "<div><h2>Summary</h2><p>This load test was executed on <b>" + testResult.TestRunCompleted + "</b>";
+                summary += " and lasted for a total of <b>" + durSecs + "</b> seconds.";
+                summary += "Durring that time <b>" + testResult.TotalRequests + "</b> total requests were made of which <b>" + totalSucPct + "%</b> succedded.";
+                summary += "That means that the target system can support approximately <b>" + dailyRate.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "</b> requests in a given day.</p>";
+                summary += "<div id=\"timeSummary\"/><div>&nbsp;</div>";
+
+                summary += "<div id=\"sizeSummary\"/><div>&nbsp;</div>";
+                summary += "<p>Check out the individual test results below for more information on each test:</p></div>";
+
+                $("#intro").append(summary);
+                $("#intro").append(introContent);
+                addSummaryStats();
+
+            }
+            function addStats(testId, testObj)
+            {
+                //error percentage gague   
+                var errorPct = (testObj.Requests.Successes / (testObj.Requests.Errors + testObj.Requests.Successes)) * 100;
+                console.log(errorPct);
+                console.log(testObj.Requests.Errors);
+                console.log(testObj.Requests.Errors + testObj.Requests.Successes);
+
+                successRt = Math.round(errorPct * 100) / 100;
+
+
+                var g5 = new JustGage({
+                    id: "graph-succ-" + testId,
+                    value: successRt,
+                    min: 0,
+                    max: 100,
+                    title: "Successful Responses",
+                    label: "% success",
+                    levelColorsGradient: false
+                });
+                //var successData = google.visualization.arrayToDataTable([
+                //    ['Label', 'Value'],
+                //    ['Success RT', successRt]
+                //]);
+
+                //var sucOpts = {height: 197, width: 197, redFrom: 0, redTo: 75, yellowFrom: 75, yellowTo: 90, greenFrom: 90, greenTo: 100};
+                //new google.visualization.Gauge(document.getElementById("graph-succ-" + testId)).draw(successData, sucOpts);
+
+                //response time gague
+                var timeDataObj = testObj.Stats[1];
+                var timeMean = Math.round(timeDataObj.Mean * 100) / 100;
+                //var timeData = google.visualization.arrayToDataTable([
+                //    ['Label', 'Value'],
+                //    ['Time (ms)', timeMean]
+                // ]);
+                var maxTime = 3000 > timeMean ? 3000 : timeMean;// > timeDataObj.Max ? 3000 : Math.round(timeDataObj.Max * 100)/100;
+                //var timeOpts = {height: 197, width: 197, max: maxTime, redFrom: 600, redTo: maxTime, yellowFrom: 300, yellowTo: 600, greenFrom: 0, greenTo: 300};
+
+                //new google.visualization.Gauge(document.getElementById("graph-time-" + testId)).draw(timeData, timeOpts);
+                var g5 = new JustGage({
+                    id: "graph-time-" + testId,
+                    value: timeMean,
+                    min: 0,
+                    max: maxTime,
+                    title: "Response Time",
+                    label: "MS",
+                    levelColorsGradient: false
+                });
+            }
+
+            function addSummaryStats()
+            {
+
+                var allTime = new google.visualization.DataTable();
+                allTime.addColumn('string', 'Label');
+                allTime.addColumn('number', 'min');
+                allTime.addColumn('number', 'lower');
+                allTime.addColumn('number', 'upper');
+                allTime.addColumn('number', 'max');
+                var allSize = new google.visualization.DataTable();
+                allSize.addColumn('string', 'Label');
+                allSize.addColumn('number', 'min');
+                allSize.addColumn('number', 'lower');
+                allSize.addColumn('number', 'upper');
+                allSize.addColumn('number', 'max');
+
+                $.each(testResult.Tests, function(i, val)
+                {
+                    $.each(val.Stats, function(i, val2)
+                    {
+                        if (val2.Name === "size")
+                        {
+                            var lower = (val2.Mean - val2.Sdev) < 0 ? 0 : (val2.Mean - val2.Sdev) / 1024;
+                            allSize.addRows([
+                                [val.Name, val2.Min / 1024, lower, (val2.Mean + val2.Sdev) / 1024, val2.Max / 1024]
+                            ]);
+                        }
+                        if (val2.Name === "elapsed")
+                        {
+                            var lower = (val2.Mean - val2.Sdev) < 0 ? 0 : (val2.Mean - val2.Sdev);
+                            allTime.addRows([
+                                [val.Name, val2.Min, lower, val2.Mean + val2.Sdev, val2.Max]
+                            ]);
+                        }
+                    });
+                });
+                var timeChart = new google.visualization.CandlestickChart(document.getElementById('timeSummary'));
+                var timeOpts = {theme: 'maximized', title: 'Request Times (ms)'};
+                timeChart.draw(allTime, timeOpts);
+                var sizeChart = new google.visualization.CandlestickChart(document.getElementById('sizeSummary'));
+                var sizeOpts = {theme: 'maximized', title: 'Request Sizes (kb)', 'vAxis.title': 'kilobytes'};
+                sizeChart.draw(allSize, sizeOpts);
+
+            }
+
+
+
+
+        </script>
+
+
+    </head>
+    <body role="document">
+        <header class="navbar" role="banner">
+            <div class="container">
+                <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+                    <div class="container">
+                        <div class="navbar-header">
+                            <a href="http://boundlessgeo.com">
+                                <img src="http://boundlessgeo.com/wp-content/themes/open-geo/images/logo.png"/>                    
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <div class="container" role="main">            
+            <div class="panel panel-default" id="summary">
+                <div class="panel-heading">Load Testing Results</div>
+                <div class="panel-body" id="intro">
+                </div>                                
+            </div>                       
+        </div>
+
+        <script src="../runner/output.js"></script>
+    </body>
+</html>
+​

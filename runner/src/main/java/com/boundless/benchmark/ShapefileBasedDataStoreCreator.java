@@ -48,7 +48,7 @@ public class ShapefileBasedDataStoreCreator extends GeoserverCommunicator {
             boolean publishStyle = false;
             try
             {
-                if(this.getReader().getStyles().getNames().contains(styleName))
+                if(!this.getReader().getStyles().getNames().contains(styleName))
                 {
                     publishStyle = this.getPublisher().publishStyle(dp.getSld(),styleName);
                     logger.info("Published style {}", styleName);
@@ -100,7 +100,10 @@ public class ShapefileBasedDataStoreCreator extends GeoserverCommunicator {
     }
 
     public void process(Exchange exchng) throws Exception {
-       
+        if(!this.isDeployData())
+        {
+            return;
+        }
         logger.info("Processing Shapefiles....");
         List<DataPackage> packageList = DataFinder.findData(new File(this.dataDir));
 
