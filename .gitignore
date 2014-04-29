@@ -6,3 +6,11 @@ runner/jmeter.log
 runner/target/maven-archiver/pom.properties
 
 runner/target/maven-archiver/pom.properties
+
+runner/output.js
+
+runner/nbactions.xml
+
+data/raster/bluemarble4km copy/TrueMarble.250m.21600x21600.B1.tif
+
+data/raster/bluemarble4km/TrueMarble.4km.10800x5400.tif
