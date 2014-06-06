@@ -21,7 +21,14 @@ public class DataFinder
 {
     private static final Logger logger = LoggerFactory.getLogger(DataFinder.class);
     //need to setup this class to cache info instead of parsing it out everytime
-    private List<DataPackage> cache;
+    private static List<DataPackage> cache = new ArrayList<DataPackage>();
+
+    /**
+     * @return the cache
+     */
+    public static List<DataPackage> getCache() {
+        return cache;
+    }
     private String cachedDir;
     
     private static DataFinder instance;
@@ -38,9 +45,14 @@ public class DataFinder
         }
         return instance;
     }
-    
     public static List<DataPackage> findData(File rootDirectory)
     {
+        cache.clear();
+        return _findData(rootDirectory);
+    }
+    private static List<DataPackage> _findData(File rootDirectory)
+    {
+        
         logger.debug("Looking through {}", rootDirectory.getName());
         List<DataPackage> packages = new ArrayList<DataPackage>();
         
@@ -51,7 +63,7 @@ public class DataFinder
             File[] listFiles = rootDirectory.listFiles();           
             for(File file: listFiles)
             {             
-                packages.addAll(DataFinder.findData(file));            
+                packages.addAll(DataFinder._findData(file));            
             }            
         }    
         else
@@ -61,7 +73,10 @@ public class DataFinder
                    {
                     try{
                        DataPackage dp = new DataPackage(rootDirectory);
-                       packages.add(dp);}
+                       packages.add(dp);
+                       cache.add(dp);
+                    }
+                    
                        catch(IOException ex)
                        {
                            logger.warn("error parsing data package file: {}", ex.getMessage());

@@ -33,13 +33,18 @@
                 var introContent = "<ul>";
                 $.each(testResult.Tests, function(i, val)
                 {
+                    var startDt = new Date(0);
+                    var endDt = new Date(0);
+                    startDt.setUTCMilliseconds(val.StartTime);
+                    endDt.setUTCMilliseconds(val.EndTime);
+                    
                     var content = "<div class=\"panel panel-default\">";
-                    content += "<div class=\"panel-heading\" id=\"" + val.Id + "\"><b>Tests &quot;" + val.Name + "&quot;</b></div>";
+                    content += "<div class=\"panel-heading\" id=\"" + val.Id + "\"><b>Tests &quot;" + val.Name + "&quot;</b><p>Ran from "+startDt.toLocaleTimeString()+" to "+endDt.toLocaleTimeString()+" on "+startDt.toLocaleDateString()+"</p> </div>";
                     content += "<div class=\"panel-body\">";
                     content += "<div class=\"row\">";
-                    content += "<div class=\"span2\" id=\"graph-succ-"+val.Id+"\"></div>";
+                    content += "<div class=\"span2\" style=\"width: 200px; height:200px\" id=\"graph-succ-"+val.Id+"\"></div>";
                     
-                    content += "<div class=\"span2\" id=\"graph-time-"+val.Id+"\" />";
+                    content += "<div class=\"span2\" style=\"width: 200px; height:200px\" id=\"graph-time-"+val.Id+"\" />";
                     content += "</div></div></div></div>";
 
                     $("#summary").after(content);
@@ -56,12 +61,19 @@
                 var dailyRate = (86400 / durSecs) * testResult.TotalRequests;
                 dailyRate = Math.round(dailyRate);
                 var summary = "<div><h2>Summary</h2><p>This load test was executed on <b>" + testResult.TestRunCompleted + "</b>";
-                summary += " and lasted for a total of <b>" + durSecs + "</b> seconds.";
-                summary += "Durring that time <b>" + testResult.TotalRequests + "</b> total requests were made of which <b>" + totalSucPct + "%</b> succedded.";
+                if(durSecs < 60)
+                {
+                    summary += " and lasted for a total of <b>" + durSecs + "</b> seconds.";
+                }
+                else
+                {
+                    summary += " and lasted for a total of <b>" + durSecs/60 + "</b> minutes.";                    
+                }
+                summary += "Durring that time <b>" + testResult.TotalRequests + "</b> total requests were made of which <b>" + totalSucPct + "%</b> succeeded.";
                 summary += "That means that the target system can support approximately <b>" + dailyRate.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "</b> requests in a given day.</p>";
                 summary += "<div id=\"timeSummary\"/><div>&nbsp;</div>";
-
                 summary += "<div id=\"sizeSummary\"/><div>&nbsp;</div>";
+                summary += "<div id=\"formatSummary\"/><div>&nbsp;</div>";
                 summary += "<p>Check out the individual test results below for more information on each test:</p></div>";
 
                 $("#intro").append(summary);
@@ -73,9 +85,7 @@
             {
                 //error percentage gague   
                 var errorPct = (testObj.Requests.Successes / (testObj.Requests.Errors + testObj.Requests.Successes)) * 100;
-                console.log(errorPct);
-                console.log(testObj.Requests.Errors);
-                console.log(testObj.Requests.Errors + testObj.Requests.Successes);
+         
 
                 successRt = Math.round(errorPct * 100) / 100;
 
@@ -87,33 +97,23 @@
                     max: 100,
                     title: "Successful Responses",
                     label: "% success",
-                    levelColorsGradient: false
+                    levelColors: ["FF0000","FFFF00","00FF00"],
+                    levelColorsGradient: true
                 });
-                //var successData = google.visualization.arrayToDataTable([
-                //    ['Label', 'Value'],
-                //    ['Success RT', successRt]
-                //]);
-
-                //var sucOpts = {height: 197, width: 197, redFrom: 0, redTo: 75, yellowFrom: 75, yellowTo: 90, greenFrom: 90, greenTo: 100};
-                //new google.visualization.Gauge(document.getElementById("graph-succ-" + testId)).draw(successData, sucOpts);
-
+              
                 //response time gague
                 var timeDataObj = testObj.Stats[1];
                 var timeMean = Math.round(timeDataObj.Mean * 100) / 100;
-                //var timeData = google.visualization.arrayToDataTable([
-                //    ['Label', 'Value'],
-                //    ['Time (ms)', timeMean]
-                // ]);
+              
                 var maxTime = 3000 > timeMean ? 3000 : timeMean;// > timeDataObj.Max ? 3000 : Math.round(timeDataObj.Max * 100)/100;
-                //var timeOpts = {height: 197, width: 197, max: maxTime, redFrom: 600, redTo: maxTime, yellowFrom: 300, yellowTo: 600, greenFrom: 0, greenTo: 300};
-
-                //new google.visualization.Gauge(document.getElementById("graph-time-" + testId)).draw(timeData, timeOpts);
+              
                 var g5 = new JustGage({
                     id: "graph-time-" + testId,
                     value: timeMean,
                     min: 0,
                     max: maxTime,
-                    title: "Response Time",
+                    title: "Response Time",                                        
+                    levelColors: ["00FF00","FFFF00","FF0000"],
                     label: "MS",
                     levelColorsGradient: false
                 });
@@ -155,6 +155,17 @@
                         }
                     });
                 });
+                
+                var allFormatsData = [['Format','Hits']];
+                $.each(testResult.DataFormats, function(i, val)
+                {   
+                    var tempArr = [i, val.Value];
+                    allFormatsData.push(tempArr);
+                });
+                
+                var formatChart = new google.visualization.PieChart(document.getElementById('formatSummary'))
+                var formatOpts = {title: 'Response Formats', is3D: true};
+                formatChart.draw(google.visualization.arrayToDataTable(allFormatsData), formatOpts);
                 var timeChart = new google.visualization.CandlestickChart(document.getElementById('timeSummary'));
                 var timeOpts = {theme: 'maximized', title: 'Request Times (ms)'};
                 timeChart.draw(allTime, timeOpts);

@@ -3,10 +3,9 @@
  */
 package com.boundless.benchmark;
 
-
-import com.boundless.benchmark.data.DataPackage;
 import it.geosolutions.geoserver.rest.GeoServerRESTPublisher;
 import it.geosolutions.geoserver.rest.GeoServerRESTReader;
+import java.io.File;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,16 +14,35 @@ import org.slf4j.LoggerFactory;
  *
  */
 public abstract class GeoserverCommunicator extends AbstractBenchmarkComponent {
-    
+
     protected Logger logger = LoggerFactory.getLogger("GeoserverCommunicator");
-    
+
     private GeoServerRESTPublisher publisher;
 
     private GeoServerRESTReader reader;
-    
+
     private boolean deployData;
 
-    
+    protected boolean createStyle(File sld, String styleName) {
+        boolean result = false;
+        try {
+            if (!this.getReader().getStyles().getNames().contains(styleName)) {
+                result = this.getPublisher().publishStyle(sld, styleName);
+                logger.info("Published style {}", styleName);
+                
+            } else {
+                logger.info("Style {} already exists", styleName);
+                
+            }
+        } catch (Exception ex) {
+            logger.error("Error uploading style: {}", ex.getMessage());
+        }
+        finally
+        {
+            return result;
+        }
+    }
+
     /**
      * @return the publisher
      */

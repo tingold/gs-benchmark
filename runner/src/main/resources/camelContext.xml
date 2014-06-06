@@ -38,10 +38,11 @@
             <camel:to uri="bean:jobWatcher?method=process"/>
         </camel:route>
         
-        <camel:route id="processingRoute" autoStartup="false">            
-            <camel:from uri="file:../data?antInclude=**/*.jmx&amp;recursive=true&amp;noop=true"/>                                    
-            <camel:to uri="bean:jmeterrunner?method=process"/>                     
-        </camel:route>
+           <!--<camel:route id="processingRoute" autoStartup="false">            
+            <camel:from uri="file:../data?antInclude=**/*.jmx&amp;recursive=true&amp;noop=true"/>            
+                <camel:to uri="bean:jmeterrunner?method=process"/>                     
+            </camel:route>
+        -->
                 
         <camel:route id="setupRoute">   
             <camel:from uri="timer://runOnce?repeatCount=1&amp;delay=5000"/>
@@ -50,7 +51,8 @@
             <camel:to uri="bean:db-ds?method=process" />
             <camel:to uri="bean:raster-creator?method=process"/>           
             <camel:log message="Setup Completed" loggingLevel="INFO"/>
-            <camel:to uri="controlbus:route?routeId=processingRoute&amp;action=start"/>
+            <camel:to uri="bean:jmeterrunner?method=process"/>                     
+            <!--<camel:to uri="controlbus:route?routeId=processingRoute&amp;action=start"/>-->
         </camel:route>        
     </camel:camelContext>
     

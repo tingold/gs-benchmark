@@ -9,6 +9,8 @@ package com.boundless.benchmark.data;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +36,10 @@ public class DataPackage {
     private DataFormat format;
     
     private String SRS;
+    
+    private List<File> tests = new ArrayList<File>();
+    
+    private Boolean enabled;
     
     public DataPackage(){}
     
@@ -63,6 +69,24 @@ public class DataPackage {
            this.sld = new File(style);
            
            this.format = DataFormat.valueOf(props.getProperty("data.layer.format").toUpperCase());
+           
+           this.enabled = Boolean.parseBoolean(props.getProperty("data.layer.enabled"));
+           
+           String testString = props.getProperty("data.layer.tests","");
+           
+           if(!testString.isEmpty() && testString.contains(","))
+           { 
+               String[] testArry = testString.split(",");               
+               for(String test: testString.split(","))
+               {
+                   tests.add(new File(properties.getParentFile().getCanonicalPath()+File.separator+test));
+               }
+           }
+           else if(!testString.isEmpty())
+           {
+               logger.info("Adding test {}", testString);
+               tests.add(new File(properties.getParentFile().getCanonicalPath()+File.separator+testString));
+           }
         }
         
         
@@ -164,6 +188,34 @@ public class DataPackage {
      */
     public void setFormat(DataFormat format) {
         this.format = format;
+    }
+
+    /**
+     * @return the enabled
+     */
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    /**
+     * @param enabled the enabled to set
+     */
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    /**
+     * @return the tests
+     */
+    public List<File> getTests() {
+        return tests;
+    }
+
+    /**
+     * @param tests the tests to set
+     */
+    public void setTests(List<File> tests) {
+        this.tests = tests;
     }
     
     

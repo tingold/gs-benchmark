@@ -38,52 +38,33 @@ public class ShapefileBasedDataStoreCreator extends GeoserverCommunicator {
         this.workspaceName = workspaceName;
     }
 
+    protected void loadZip(DataPackage dp) {
+        if (!dp.getEnabled()) {
+            return;
+        }
 
+        try {
 
-    protected void loadZip(DataPackage dp) 
-    { 
-        try{
-            
-            String styleName = dp.getName()+"_style";
+            String styleName = dp.getName() + "_style";
             boolean publishStyle = false;
-            try
+            if (dp.getSld().exists()) 
             {
-                if(!this.getReader().getStyles().getNames().contains(styleName))
-                {
-                    publishStyle = this.getPublisher().publishStyle(dp.getSld(),styleName);
-                    logger.info("Published style {}", styleName);
-                }
-                else
-                {
-                    logger.info("Style {} already exists", styleName);
-                    publishStyle = true;
-                }
-            }
-            catch(Exception ex)
-            {
-                logger.error("Error uploading style: {}", ex.getMessage());
+                publishStyle = createStyle(dp.getSld(),styleName);
             }
             //if the style insert succeeded then assign the style to the new layer
-            if(publishStyle)
-            {
-                this.getPublisher().publishShp(workspaceName,dp.getName()+"_store", dp.getName(), dp.getDataFile(), dp.getSRS(), styleName);
+            if (publishStyle) {
+                this.getPublisher().publishShp(workspaceName, dp.getName() + "_store", dp.getName(), dp.getDataFile(), dp.getSRS(), styleName);
                 logger.info("Published layer {} with default style {}", dp.getName(), styleName);
-            }
-            //otherwise just leave it as default
-            else
-            {
-                this.getPublisher().publishShp(workspaceName,dp.getName()+"_store", dp.getName(), dp.getDataFile());
+            } //otherwise just leave it as default
+            else {
+                this.getPublisher().publishShp(workspaceName, dp.getName() + "_store", dp.getName(), dp.getDataFile());
                 logger.info("Published layer {} with no default style", dp.getName());
             }
-                                    
-        }
-        catch(Exception ex)
-        {
+
+        } catch (Exception ex) {
             logger.error("Error publishing datapackage {}: {}", dp.getName(), ex.getMessage());
         }
     }
-
-    
 
     /**
      * @return the dataDir
@@ -100,23 +81,21 @@ public class ShapefileBasedDataStoreCreator extends GeoserverCommunicator {
     }
 
     public void process(Exchange exchng) throws Exception {
-        if(!this.isDeployData())
-        {
+        if (!this.isDeployData()) {
             return;
         }
         logger.info("Processing Shapefiles....");
         List<DataPackage> packageList = DataFinder.findData(new File(this.dataDir));
 
-        if(!this.getReader().getWorkspaceNames().contains(this.workspaceName))
-        {
+        if (!this.getReader().getWorkspaceNames().contains(this.workspaceName)) {
             this.getPublisher().createWorkspace(workspaceName);
         }
-        
+
         for (DataPackage dp : packageList) {
             if (dp.getDataType() == DataPackage.DataType.VECTOR && dp.getEncoding() == DataPackage.Encoding.ZIP) {
                 this.loadZip(dp);
             }
 
-        }        
-       }
+        }
+    }
 }

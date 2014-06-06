@@ -8,8 +8,11 @@ package com.boundless.benchmark.data.results;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -23,6 +26,23 @@ public class SingleTestOutput implements Serializable
     private String name;
     private final String id = UUID.randomUUID().toString();
     private List<SimpleStatistic> stats = new ArrayList<SimpleStatistic>();
+    private Map<String, AtomicInteger> dataFormats;
+    private long startTime = -1;
+    private long endTime = -1;
+    
+    
+    public void addDate(long dt)
+    {        
+        if(startTime == -1 || dt < startTime)
+        {
+            startTime = dt;
+        }
+        if(endTime == -1 || dt > endTime)
+        {
+            endTime = dt;
+        }
+                
+    }
     /**
      * @return the requests
      */
@@ -70,6 +90,34 @@ public class SingleTestOutput implements Serializable
      */
     public String getId() {
         return id;
+    }
+
+    /**
+     * @return the dataTypes
+     */
+    public Map<String, AtomicInteger> getDataFormats() {
+        return dataFormats;
+    }
+
+    /**
+     * @param dataTypes the dataTypes to set
+     */
+    public void setDataFormats(Map<String, AtomicInteger> dataFormats) {
+        this.dataFormats = dataFormats;
+    }
+
+    /**
+     * @return the startTime
+     */
+    public Date getStartTime() {
+        return new Date(startTime);
+    }
+
+    /**
+     * @return the endTime
+     */
+    public Date getEndTime() {
+        return new Date(endTime);
     }
     
     public class Requests

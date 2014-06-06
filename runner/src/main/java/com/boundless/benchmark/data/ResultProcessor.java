@@ -38,6 +38,8 @@ public class ResultProcessor extends TimerTask
     private final Map<String, AtomicInteger> errorMap = new HashMap<String, AtomicInteger>();
     private final Map<String, AtomicInteger> successMap = new HashMap<String, AtomicInteger>();    
     private final Map<String, AtomicInteger> dataTypes = new HashMap<String, AtomicInteger>();
+    private final Map<String, Map<String,AtomicInteger>> dataTypeMap = new HashMap<String, Map<String,AtomicInteger>>();
+    private final Map<String, SingleTestOutput> outputMap = new HashMap<String, SingleTestOutput>();
     
     @Produce
     private ProducerTemplate template;
@@ -67,8 +69,7 @@ public class ResultProcessor extends TimerTask
         timer.scheduleAtFixedRate(this, 10000, 10000);
                 
     }
-    
-    
+       
     
     
     public synchronized void processStat(List<JTFLine> lines)
@@ -122,7 +123,7 @@ public class ResultProcessor extends TimerTask
             this.initMaps(line.getLabel());
         }
         Map<String,SummaryStatistics> subMap = statMap.get(line.getLabel());
-        
+       
         
         if(line.getSuccess())
         {
@@ -134,15 +135,29 @@ public class ResultProcessor extends TimerTask
             this.totalErrors.incrementAndGet();
             this.errorMap.get(line.getLabel()).incrementAndGet();
         }
+        //master data type map
         if(!dataTypes.containsKey(line.getDataType()))
         {
             dataTypes.put(line.getDataType(),new AtomicInteger(0));
         }
         dataTypes.get(line.getDataType()).getAndIncrement();
+        //sub map type
+        if(!dataTypeMap.containsKey(line.getLabel()))
+        {
+            dataTypeMap.put(line.getLabel(), new HashMap<String,AtomicInteger>());
+        }
+        if(!dataTypeMap.get(line.getLabel()).containsKey(line.getDataType()))
+        {
+            dataTypeMap.get(line.getLabel()).put(line.getDataType(), new AtomicInteger());
+        }
+        dataTypeMap.get(line.getLabel()).get(line.getDataType()).incrementAndGet();
+        
         
         subMap.get("elapsed").addValue(line.getElapsedTime());
         subMap.get("size").addValue(line.getByteSize());
         subMap.get("latency").addValue(line.getLatency());
+        outputMap.get(line.getLabel()).addDate(line.getTimestamp());
+        
      
     }
     
@@ -157,7 +172,7 @@ public class ResultProcessor extends TimerTask
         statMap.put(key, subMap);
         successMap.put(key, new AtomicInteger(0));
         errorMap.put(key, new AtomicInteger(0));
-        
+        outputMap.put(key, new SingleTestOutput());
     }
 
     
@@ -177,15 +192,17 @@ public class ResultProcessor extends TimerTask
         tro.setTotalRequests(this.totalErrors.intValue()+this.totalSuccesses.intValue());
         tro.setTotalErrors(this.totalErrors.intValue());
         tro.setTotalSuccesses(this.totalSuccesses.intValue());
+        tro.setDataTypes(this.dataTypes);
         
         for(String key: statMap.keySet())
         {
             Map<String, SummaryStatistics> subMap = statMap.get(key);
         
-            SingleTestOutput ro = new SingleTestOutput();
+            SingleTestOutput ro = outputMap.get(key);
             ro.setName(key);
             ro.getRequests().setErrors(this.errorMap.get(key).intValue());
             ro.getRequests().setSuccesses(this.successMap.get(key).intValue());
+            ro.setDataFormats(this.dataTypeMap.get(key));
             
             SimpleStatistic elapsed = new SimpleStatistic();
             elapsed.setName("elapsed");
@@ -229,7 +246,7 @@ public class ResultProcessor extends TimerTask
             fos.close();
             if(Desktop.isDesktopSupported())
             {
-                File html = new File("./resultTemplate.html");
+                File html = new File("../viewer/resultTemplate.html");
                 Desktop.getDesktop().browse(html.getCanonicalFile().toURI());
             }
         }

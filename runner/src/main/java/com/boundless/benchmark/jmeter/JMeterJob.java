@@ -5,6 +5,7 @@
  */
 package com.boundless.benchmark.jmeter;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -27,9 +28,11 @@ public class JMeterJob implements Runnable {
 
     private String args;
     private List<String> argList;
-
+    private String id = UUID.randomUUID().toString();
+    
     public void run() {
-        String id = UUID.randomUUID().toString();
+        
+        
         logger.info("Setting up job {}", id);
         try {
             template.sendBodyAndHeader("seda:jobStatus", id, "status", JobStatus.STARTED);
@@ -100,6 +103,13 @@ public class JMeterJob implements Runnable {
      */
     public void setArgList(List<String> argList) {
         this.argList = argList;
+    }
+
+    /**
+     * @return the id
+     */
+    public String getId() {
+        return id;
     }
 
     public enum JobStatus {

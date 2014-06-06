@@ -6,8 +6,9 @@
       <pattern>%d{MMM dd yyyy HH:mm:ss} [%C{0}] %p: %m %n</pattern>
     </encoder>
   </appender>
-
+ 
   <root level="info">
     <appender-ref ref="STDOUT" />
   </root>
+  
 </configuration>

@@ -201,6 +201,13 @@
             <artifactId>commons-math3</artifactId>
             <version>3.2</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>apache-camel</artifactId>
+            <version>2.13.1</version>
+            <scope>test</scope>
+            <type>zip</type>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

@@ -8,7 +8,10 @@ package com.boundless.benchmark.data.results;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -22,7 +25,7 @@ public class TestRunOutput implements Serializable {
     private int totalRequests = 0;
     private int totalSuccesses = 0;
     private int totalErrors = 0;
-    
+    private Map<String, AtomicInteger> dataFormats;
     private List<SingleTestOutput> tests = new ArrayList<SingleTestOutput>();
 
     /**
@@ -116,9 +119,10 @@ public class TestRunOutput implements Serializable {
         return totalErrors;
     }
 
-    /**
-     * @param totalErrors the totalErrors to set
-     */
+    public void setDataTypes(Map<String, AtomicInteger> dataTypes) {
+    this.dataFormats = dataTypes;   
+    }
+    
     public void setTotalErrors(int totalErrors) {
         this.totalErrors = totalErrors;
     }

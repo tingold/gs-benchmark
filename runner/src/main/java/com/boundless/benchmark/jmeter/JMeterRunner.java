@@ -1,6 +1,8 @@
 package com.boundless.benchmark.jmeter;
 
 import com.boundless.benchmark.IBenchmarkComponent;
+import com.boundless.benchmark.data.DataFinder;
+import com.boundless.benchmark.data.DataPackage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -10,7 +12,6 @@ import java.util.Properties;
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
 import org.apache.camel.Exchange;
-import org.apache.camel.component.file.GenericFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,24 +26,31 @@ public class JMeterRunner implements IBenchmarkComponent, CamelContextAware {
     private String jmeterLocation;
 
     private String propertiesFile;
-    
+
     private CamelContext cc;
 
     private final static String id = "jemeterrunner";
 
     public void process(Exchange exchng) throws Exception {
-        
-        GenericFile file = exchng.getIn().getBody(GenericFile.class);
-        
-        logger.debug(exchng.getIn().getBody().toString());
-        for(String hdr: exchng.getIn().getHeaders().keySet())
-        {
-            logger.debug("Header key: {}, header value: {}",hdr, exchng.getIn().getHeader(hdr));
+
+        List<DataPackage> cache = DataFinder.getCache();
+        logger.info("looking at {} cached data packages", cache.size());
+        for (DataPackage dp : cache) {
+            logger.info("looking through dataPackage {}", dp.getName());
+            if (dp.getEnabled()) {
+                logger.info("dataPackage {} is enabled", dp.getName());
+                for (File file : dp.getTests()) {
+                    logger.info("loading file {}", file.getName());
+                    this.runJMeter(file);
+                }
+            } else {
+                logger.info("Skipping {} as it is marked 'disabled'", dp.getName());
+            }
+
         }
-        this.runJMeter(file);
     }
-    
-    private void runJMeter(GenericFile testfile) throws InterruptedException, IOException {
+
+    private void runJMeter(File testfile) throws InterruptedException, IOException {
         String jmeter = jmeterLocation + File.separator + "apache-jmeter-2.11" + File.separator + "bin" + File.separator;
         String os = System.getProperty("os.name");
         if (os.contains("windows")) {
@@ -51,34 +59,31 @@ public class JMeterRunner implements IBenchmarkComponent, CamelContextAware {
             jmeter += "jmeter.sh";
         }
 
-  
         File jm = new File(jmeter);
         //just load the jmeter specific properties and set them on the command line
-        //for some reason the referencing the property file isn't working
+        //for some reason referencing the property file isn't working
         //make sure its executable
         jm.setExecutable(true);
-        
-        
+
         List<String> args = new ArrayList<String>();
         args.add(jm.getCanonicalPath());
         args.add("-n");
         args.add("-t");
-        args.add(testfile.getAbsoluteFilePath());
-        
+        args.add(testfile.getAbsolutePath());
+
         //StringBuilder command = new StringBuilder(jm.getCanonicalPath()).append(" -n  -t ").append(testfile.getAbsoluteFilePath());
         Properties props = new Properties();
         props.load(new FileInputStream(propertiesFile));
-        
 
         for (Object obj : props.keySet()) {
             String key = (String) obj;
             if (key.startsWith("ps.jmeter")) {
                 //command.append(" -J").append(key).append("=").append(props.getProperty(key));
-                args.add("-J"+key+"="+props.getProperty(key));
+                args.add("-J" + key + "=" + props.getProperty(key));
             }
         }
         //command.append(" -J").append("ps.report.name=").append(String.valueOf(System.currentTimeMillis())).append(".jtl");
-        String outfileName = String.valueOf(System.currentTimeMillis());
+        
         //args.add("-J"+"ps.report.name="+outfileName+".jtl");
         args.add("-Jjmeter.save.saveservice.data_type=true");
         args.add("-Jjmeter.save.saveservice.label=true");
@@ -88,19 +93,24 @@ public class JMeterRunner implements IBenchmarkComponent, CamelContextAware {
         args.add("-Jjmeter.save.saveservice.successful=true");
         args.add("-Jjmeter.save.saveservice.thread_name=true");
         args.add("-Jjmeter.save.saveservice.time=true");
-        
+        args.add("-Jjmeter.save.saveservice.response_data.on_error=true");
+
         args.add("-l");
-        args.add(outfileName+".jtl");
-        
+
         JMeterJob job = new JMeterJob();
+        String outfileName = testfile.getName()+job.getId()+".jtl";
+        args.add(outfileName);
+        
+
+        
         job.setArgList(args);
         //job.setArgs(command.toString());
         job.setTemplate(cc.createProducerTemplate());
-        
+
         Thread thread = new Thread(job);
         thread.start();
         logger.info("Started JMeter job on thread {}", thread.getName());
-        
+
     }
 
     public String getId() {
@@ -136,7 +146,7 @@ public class JMeterRunner implements IBenchmarkComponent, CamelContextAware {
     public void setPropertiesFile(String propertiesFile) {
         this.propertiesFile = propertiesFile;
     }
-   
+
     public void setCamelContext(CamelContext cc) {
         this.cc = cc;
     }

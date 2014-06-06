@@ -74,11 +74,11 @@ public class ResultProcessorTest {
      */
     @Test
     public void testPrintStats() {
-        System.out.println("printStats");
-        ResultProcessor instance = new ResultProcessor();
-        instance.processStat(this.genTestLine());
-        instance.printStats();
-        
+//        System.out.println("printStats");
+//        ResultProcessor instance = new ResultProcessor();
+//        instance.processStat(this.genTestLine());
+//        instance.printStats();
+//        
         
     }
     
